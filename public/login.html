@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Simple Bank</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container d-flex align-center justify-between">
+            <a href="/" class="navbar-brand">
+                <i class="fas fa-university"></i>
+                Simple Bank
+            </a>
+            <div class="navbar-nav d-flex align-center">
+                <a href="/register" class="btn btn-outline">Get Started</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Login Section -->
+    <section style="min-height: calc(100vh - 80px); display: flex; align-items: center; padding: 2rem 0;">
+        <div class="container">
+            <div class="container-xs">
+                <div class="card fade-in" style="position: relative; overflow: hidden;">
+                    <!-- Background Pattern -->
+                    <div style="position: absolute; top: 0; right: 0; width: 200px; height: 200px; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); border-radius: 50%; transform: translate(50%, -50%);"></div>
+                    
+                    <div class="card-body" style="padding: 3rem; position: relative; z-index: 1;">
+                        <div class="text-center mb-4">
+                            <div style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                                <i class="fas fa-sign-in-alt" style="font-size: 2rem; color: white;"></i>
+                            </div>
+                            <h2 style="margin-bottom: 0.5rem;">Welcome Back</h2>
+                            <p style="color: var(--text-secondary);">Sign in to your account to continue</p>
+                        </div>
+                        
+                        <form id="loginForm">
+                            <div class="form-group">
+                                <label for="username" class="form-label">
+                                    <i class="fas fa-user"></i>
+                                    Username
+                                </label>
+                                <input type="text" class="form-control" id="username" name="username" placeholder="Enter your username" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="password" class="form-label">
+                                    <i class="fas fa-lock"></i>
+                                    Password
+                                </label>
+                                <div style="position: relative;">
+                                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+                                    <button type="button" class="btn" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-light);" onclick="togglePassword()">
+                                        <i class="fas fa-eye" id="toggleIcon"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-secondary); cursor: pointer;">
+                                    <input type="checkbox" id="rememberMe" style="margin: 0;">
+                                    Remember me
+                                </label>
+                                <a href="#" style="color: var(--primary-color); text-decoration: none; font-size: 0.875rem;">Forgot password?</a>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-full btn-lg" id="loginBtn">
+                                <i class="fas fa-sign-in-alt"></i>
+                                Sign In
+                            </button>
+                        </form>
+                        
+                        <div class="text-center" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-light);">
+                            <p style="color: var(--text-secondary); margin-bottom: 1rem;">Don't have an account?</p>
+                            <a href="/register" class="btn btn-outline btn-full">
+                                <i class="fas fa-user-plus"></i>
+                                Create Account
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Toggle password visibility
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+
+        // Login form submission
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const loginBtn = document.getElementById('loginBtn');
+            const originalText = loginBtn.innerHTML;
+            
+            // Show loading state
+            loginBtn.innerHTML = '<div class="loading"></div> Signing In...';
+            loginBtn.disabled = true;
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    // Store JWT token and user data
+                    localStorage.setItem('jwt', result.token);
+                    localStorage.setItem('user', JSON.stringify(result.user));
+                    
+                    // Show success message
+                    showAlert('Login successful! Redirecting...', 'success');
+                    
+                    // Add success animation
+                    loginBtn.innerHTML = '<i class="fas fa-check"></i> Success!';
+                    loginBtn.style.background = 'linear-gradient(135deg, var(--success-color) 0%, #059669 100%)';
+                    
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1500);
+                } else {
+                    // Reset button
+                    loginBtn.innerHTML = originalText;
+                    loginBtn.disabled = false;
+                    
+                    showAlert(result.error || 'Login failed. Please check your credentials.', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                
+                // Reset button
+                loginBtn.innerHTML = originalText;
+                loginBtn.disabled = false;
+                
+                showAlert('An error occurred. Please try again.', 'error');
+            }
+        });
+        
+        function showAlert(message, type) {
+            // Remove existing alerts
+            const existingAlert = document.querySelector('.alert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+            
+            // Create new alert
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} slide-up`;
+            alertDiv.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                    ${message}
+                </div>
+                <button type="button" class="alert-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            // Insert alert at the top of the form
+            const form = document.getElementById('loginForm');
+            form.parentNode.insertBefore(alertDiv, form);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // Add focus effects to form inputs
+        document.querySelectorAll('.form-control').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'scale(1.02)';
+                this.parentElement.style.transition = 'transform 0.2s ease';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'scale(1)';
+            });
+        });
+
+        // Add enter key support for form submission
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+</body>
+</html>

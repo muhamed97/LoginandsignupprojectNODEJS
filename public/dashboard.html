@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Simple Bank</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container d-flex align-center justify-between">
+            <a href="/" class="navbar-brand">
+                <i class="fas fa-university"></i>
+                Simple Bank
+            </a>
+            <div class="navbar-nav d-flex align-center" style="gap: 1rem;">
+                <span id="welcomeText" style="color: var(--text-secondary); font-weight: 500;">Welcome, User</span>
+                <button class="btn btn-outline" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Content -->
+    <section class="dashboard">
+        <div class="container">
+            <!-- Balance Card -->
+            <div class="balance-card card fade-in" style="margin-bottom: 2rem; position: relative; overflow: hidden;">
+                <div class="card-body text-center" style="padding: 3rem;">
+                    <div style="position: absolute; top: -50%; right: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%); animation: float 6s ease-in-out infinite;"></div>
+                    <div style="position: relative; z-index: 1;">
+                        <h5 style="margin-bottom: 1rem; opacity: 0.9;">Account Balance</h5>
+                        <div class="balance-amount" id="balance">$0.00</div>
+                        <p style="margin-bottom: 0; opacity: 0.8;">Available Balance</p>
+                        <div style="margin-top: 1rem; font-size: 0.875rem; opacity: 0.7;">
+                            Account: <span id="accountNumber">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Cards -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-bottom: 3rem;">
+                <!-- Deposit Card -->
+                <div class="card transaction-card">
+                    <div class="card-body text-center">
+                        <div class="transaction-icon deposit">
+                            <i class="fas fa-plus"></i>
+                        </div>
+                        <h4 style="margin-bottom: 1rem;">Deposit Money</h4>
+                        <form id="depositForm">
+                            <div class="form-group">
+                                <label for="depositAmount" class="form-label">Amount</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="depositAmount" step="0.01" min="0.01" placeholder="0.00" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="depositDescription" class="form-label">Description (Optional)</label>
+                                <input type="text" class="form-control" id="depositDescription" placeholder="e.g., Salary deposit">
+                            </div>
+                            <button type="submit" class="btn btn-success btn-full">
+                                <i class="fas fa-plus"></i>
+                                Deposit
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Withdraw Card -->
+                <div class="card transaction-card">
+                    <div class="card-body text-center">
+                        <div class="transaction-icon withdraw">
+                            <i class="fas fa-minus"></i>
+                        </div>
+                        <h4 style="margin-bottom: 1rem;">Withdraw Money</h4>
+                        <form id="withdrawForm">
+                            <div class="form-group">
+                                <label for="withdrawAmount" class="form-label">Amount</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="withdrawAmount" step="0.01" min="0.01" placeholder="0.00" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="withdrawDescription" class="form-label">Description (Optional)</label>
+                                <input type="text" class="form-control" id="withdrawDescription" placeholder="e.g., ATM withdrawal">
+                            </div>
+                            <button type="submit" class="btn btn-danger btn-full">
+                                <i class="fas fa-minus"></i>
+                                Withdraw
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction History -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex align-center justify-between">
+                        <h5 style="margin: 0;">
+                            <i class="fas fa-history"></i>
+                            Recent Transactions
+                        </h5>
+                        <button class="btn btn-outline btn-sm" onclick="loadTransactionHistory()">
+                            <i class="fas fa-refresh"></i>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="transactionHistory">
+                        <div class="text-center" style="padding: 2rem; color: var(--text-light);">
+                            <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                            <p>No transactions yet</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Actions Modal -->
+    <div id="quickActionsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="card" style="width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto;">
+            <div class="card-header">
+                <div class="d-flex align-center justify-between">
+                    <h5 style="margin: 0;">Quick Actions</h5>
+                    <button class="btn" onclick="closeQuickActions()" style="background: none; border: none; font-size: 1.5rem; color: var(--text-light);">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <button class="btn btn-outline" onclick="openDepositModal()">
+                        <i class="fas fa-plus"></i>
+                        Deposit
+                    </button>
+                    <button class="btn btn-outline" onclick="openWithdrawModal()">
+                        <i class="fas fa-minus"></i>
+                        Withdraw
+                    </button>
+                    <button class="btn btn-outline" onclick="loadTransactionHistory()">
+                        <i class="fas fa-history"></i>
+                        View History
+                    </button>
+                    <button class="btn btn-outline" onclick="window.print()">
+                        <i class="fas fa-print"></i>
+                        Print Statement
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <button id="fab" onclick="toggleQuickActions()" style="position: fixed; bottom: 2rem; right: 2rem; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); border: none; color: white; font-size: 1.5rem; box-shadow: var(--shadow-lg); cursor: pointer; z-index: 999; transition: var(--transition);">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <script>
+        // Global variables
+        const token = localStorage.getItem('jwt');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        
+        // Check authentication
+        if (!token) {
+            window.location.href = '/login';
+        }
+        
+        // Update welcome text
+        document.getElementById('welcomeText').textContent = `Welcome, ${user.firstName || user.username || 'User'}`;
+        
+        // Load dashboard data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+            setupEventListeners();
+        });
+        
+        // Load dashboard data
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('/api/account', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    updateBalance(data.balance);
+                    document.getElementById('accountNumber').textContent = 'N/A';
+                    displayTransactions(data.transactions);
+                } else if (response.status === 401 || response.status === 403) {
+                    // Token expired or invalid
+                    localStorage.removeItem('jwt');
+                    localStorage.removeItem('user');
+                    window.location.href = '/login';
+                } else {
+                    showAlert('Failed to load dashboard data', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error loading dashboard data', 'error');
+            }
+        }
+        
+        // Update balance display
+        function updateBalance(balance) {
+            const balanceElement = document.getElementById('balance');
+            const currentBalance = parseFloat(balance);
+            
+            // Animate balance change
+            balanceElement.style.transform = 'scale(1.1)';
+            balanceElement.style.transition = 'transform 0.3s ease';
+            
+            setTimeout(() => {
+                balanceElement.textContent = '$' + currentBalance.toFixed(2);
+                balanceElement.style.transform = 'scale(1)';
+            }, 150);
+        }
+        
+        // Display transactions
+        function displayTransactions(transactions) {
+            const container = document.getElementById('transactionHistory');
+            
+            if (transactions.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center" style="padding: 2rem; color: var(--text-light);">
+                        <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <p>No transactions yet</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            transactions.forEach(tx => {
+                const isDeposit = tx.type === 'deposit';
+                const typeClass = isDeposit ? 'deposit' : 'withdraw';
+                const typeIcon = isDeposit ? 'fa-plus' : 'fa-minus';
+                const amountPrefix = isDeposit ? '+' : '-';
+                const amountColor = isDeposit ? 'var(--success-color)' : 'var(--error-color)';
+                
+                html += `
+                    <div class="transaction-item ${typeClass} fade-in">
+                        <div class="d-flex align-center justify-between">
+                            <div class="d-flex align-center" style="gap: 1rem;">
+                                <div style="width: 40px; height: 40px; border-radius: 50%; background: ${isDeposit ? 'var(--success-color)' : 'var(--error-color)'}; display: flex; align-items: center; justify-content: center; color: white;">
+                                    <i class="fas ${typeIcon}"></i>
+                                </div>
+                                <div>
+                                    <h6 style="margin: 0; font-weight: 600;">${tx.type.charAt(0).toUpperCase() + tx.type.slice(1)}</h6>
+                                    <small style="color: var(--text-light);">${tx.description || 'Transaction'}</small>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-weight: 700; color: ${amountColor}; font-size: 1.125rem;">
+                                    ${amountPrefix}$${parseFloat(tx.amount).toFixed(2)}
+                                </div>
+                                <small style="color: var(--text-light);">
+                                    Balance: $${parseFloat(tx.balance_after).toFixed(2)}
+                                </small>
+                                <div style="font-size: 0.75rem; color: var(--text-light); margin-top: 0.25rem;">
+                                    ${new Date(tx.created_at).toLocaleString()}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Deposit form
+            document.getElementById('depositForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await processTransaction('deposit');
+            });
+            
+            // Withdraw form
+            document.getElementById('withdrawForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await processTransaction('withdraw');
+            });
+        }
+        
+        // Process transaction
+        async function processTransaction(type) {
+            const amount = parseFloat(document.getElementById(type + 'Amount').value);
+            const description = document.getElementById(type + 'Description').value;
+            const button = document.querySelector(`#${type}Form button[type="submit"]`);
+            const originalText = button.innerHTML;
+            
+            if (amount <= 0) {
+                showAlert('Please enter a valid amount', 'error');
+                return;
+            }
+            
+            // Show loading state
+            button.innerHTML = '<div class="loading"></div> Processing...';
+            button.disabled = true;
+            
+            try {
+                const response = await fetch(`/api/${type}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ amount, description })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert(`${type.charAt(0).toUpperCase() + type.slice(1)} successful!`, 'success');
+                    document.getElementById(type + 'Amount').value = '';
+                    document.getElementById(type + 'Description').value = '';
+                    loadDashboardData();
+                } else {
+                    showAlert(result.error || `${type.charAt(0).toUpperCase() + type.slice(1)} failed`, 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert(`Error processing ${type}`, 'error');
+            } finally {
+                // Reset button
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        }
+        
+        // Load transaction history
+        async function loadTransactionHistory() {
+            try {
+                const response = await fetch('/api/account', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    displayTransactions(data.transactions);
+                } else {
+                    showAlert('Failed to load transaction history', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error loading transaction history', 'error');
+            }
+        }
+        
+        // Quick actions
+        function toggleQuickActions() {
+            const modal = document.getElementById('quickActionsModal');
+            modal.style.display = modal.style.display === 'none' ? 'flex' : 'none';
+        }
+        
+        function closeQuickActions() {
+            document.getElementById('quickActionsModal').style.display = 'none';
+        }
+        
+        function openDepositModal() {
+            document.getElementById('depositAmount').focus();
+            closeQuickActions();
+        }
+        
+        function openWithdrawModal() {
+            document.getElementById('withdrawAmount').focus();
+            closeQuickActions();
+        }
+        
+        // Show alert
+        function showAlert(message, type) {
+            // Remove existing alerts
+            const existingAlert = document.querySelector('.alert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+            
+            // Create new alert
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} slide-up`;
+            alertDiv.style.position = 'fixed';
+            alertDiv.style.top = '100px';
+            alertDiv.style.right = '20px';
+            alertDiv.style.zIndex = '1001';
+            alertDiv.style.minWidth = '300px';
+            alertDiv.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                    ${message}
+                </div>
+                <button type="button" class="alert-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            document.body.appendChild(alertDiv);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+        
+        // Logout function
+        function logout() {
+            localStorage.removeItem('jwt');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        }
+        
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'd':
+                        e.preventDefault();
+                        document.getElementById('depositAmount').focus();
+                        break;
+                    case 'w':
+                        e.preventDefault();
+                        document.getElementById('withdrawAmount').focus();
+                        break;
+                    case 'r':
+                        e.preventDefault();
+                        loadDashboardData();
+                        break;
+                }
+            }
+        });
+        
+        // Add floating action button animation
+        const fab = document.getElementById('fab');
+        fab.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.1)';
+        });
+        
+        fab.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+        });
+    </script>
+</body>
+</html>
